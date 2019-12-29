@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
@@ -116,5 +117,10 @@ public class RootConfig implements TransactionManagementConfigurer {
         DataSourceTransactionManager dtm = new DataSourceTransactionManager();
         dtm.setDataSource(initDataSource());
         return dtm;
+    }
+
+    @Bean(name = "redisTemplate")
+    public RedisTemplate initRedisTemplate() {
+        return null;
     }
 }
