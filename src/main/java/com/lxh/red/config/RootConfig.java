@@ -10,15 +10,21 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.TransactionManagementConfigurer;
+import redis.clients.jedis.JedisPoolConfig;
 
 import javax.sql.DataSource;
+import javax.sql.PooledConnection;
 import javax.xml.ws.Service;
 import java.util.Properties;
 
@@ -121,6 +127,34 @@ public class RootConfig implements TransactionManagementConfigurer {
 
     @Bean(name = "redisTemplate")
     public RedisTemplate initRedisTemplate() {
-        return null;
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        //最大空闲数
+        poolConfig.setMaxIdle(50);
+        //最大连接数
+        poolConfig.setMaxTotal(100);
+        //最大等待毫秒数
+        poolConfig.setMaxWaitMillis(20000);
+        //创建Jedis工厂
+        JedisConnectionFactory factory = new JedisConnectionFactory(poolConfig);
+        factory.setHostName("localhost");
+        factory.setPort(6379);
+        //调用后初始化方法，没有将他抛出异常
+        factory.afterPropertiesSet();
+
+        //自定义Redis序列化器
+        RedisSerializer jdk = new JdkSerializationRedisSerializer();
+        RedisSerializer string = new StringRedisSerializer();
+
+        //定义RedisTemplate,并设置连接工厂
+        RedisTemplate redisTemplate = new RedisTemplate();
+        redisTemplate.setConnectionFactory(factory);
+
+        //设置序列化器
+        redisTemplate.setDefaultSerializer(string);
+        redisTemplate.setKeySerializer(string);
+        redisTemplate.setValueSerializer(string);
+        redisTemplate.setHashValueSerializer(string);
+        redisTemplate.setHashValueSerializer(string);
+        return redisTemplate;
     }
 }

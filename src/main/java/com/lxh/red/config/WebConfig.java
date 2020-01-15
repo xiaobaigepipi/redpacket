@@ -4,17 +4,24 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.scheduling.annotation.AsyncConfigurer;
+import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.HandlerAdapter;
 import org.springframework.web.servlet.ViewResolver;
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 /*
  * @PackageName: com.lxh.red.config
@@ -28,7 +35,9 @@ import java.util.List;
 @ComponentScan(value = "com.*", includeFilters = {@ComponentScan.Filter(type = FilterType.ANNOTATION, value = Controller.class)})
 //启动spring mvc配置
 @EnableWebMvc
-public class WebConfig {
+//表名支持异步调用
+@EnableAsync
+public class WebConfig extends AsyncConfigurerSupport {
 
     /*
      * @Author 辉
@@ -67,4 +76,14 @@ public class WebConfig {
         return rma;
     }
 
+    //获取一个任务池，当在Spring环境中遇到注解@Async就会启动这个任务池的一条线程去运行对应的方法
+    @Override
+    public Executor getAsyncExecutor() {
+        ThreadPoolTaskExecutor task = new ThreadPoolTaskExecutor();
+        task.setCorePoolSize(5);
+        task.setMaxPoolSize(10);
+        task.setQueueCapacity(200);
+        task.initialize();
+        return task;
+    }
 }
